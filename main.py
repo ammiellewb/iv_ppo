@@ -1,5 +1,5 @@
 import os
-import gym
+import gymnasium as gym
 import argparse
 
 import torch
@@ -10,9 +10,9 @@ import torch.nn.functional as F
 from dqn import * 
 from utils import *
 from config import config 
-from codecarbon import EmissionsTracker
-tracker = EmissionsTracker()
-tracker.start()
+# from codecarbon import EmissionsTracker
+# tracker = EmissionsTracker()
+# tracker.start()
 
 import os 
 import time
@@ -64,6 +64,15 @@ def get_sac_dict():
                 "UWAC_VarEnsembleSAC"        : UWAC_VarEnsembleSAC
                 }
     return sac_dict
+
+def get_ppo_dict():
+    from ppo import PPOAgent, EnsemblePPO, IV_PPO
+    ppo_dict = {
+                "PPO"                        : PPOAgent,
+                "EnsemblePPO"                : EnsemblePPO,
+                "IV_PPO"                     : IV_PPO,
+                }
+    return ppo_dict
 
 
 
@@ -214,7 +223,18 @@ if __name__ == "__main__":
     except:
         pass
     print(opt.model)
-    if "sac" not in opt.model.lower():
+    
+    if "ppo" in opt.model.lower():
+        # PPO algorithm
+        ppo_dict = get_ppo_dict()
+        Model = ppo_dict[opt.model]
+        env = gym.make(opt.env)
+        np.random.seed(opt.env_seed)
+        agent = Model(env, opt, device=device)
+        # Use smaller rollouts for more frequent updates (important for sparse reward envs)
+        agent.train(n_episodes=opt.num_episodes, steps_per_epoch=512)
+    elif "sac" not in opt.model.lower():
+        # DQN algorithms
         dqn_dict = get_dqn_dict()
         Model = dqn_dict[opt.model]
         env = gym.make(opt.env)
@@ -223,9 +243,10 @@ if __name__ == "__main__":
         agent = Model(env, opt, device=device)
         agent.train(n_episodes=opt.num_episodes, eps_decay=opt.eps_decay)
     else:
+        # SAC algorithms
         from sac import *
         sac_dict = get_sac_dict()
         Model = sac_dict[opt.model]
         run_sac(Model, opt)
 
-tracker.stop()
+# tracker.stop()

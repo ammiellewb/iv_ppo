@@ -266,7 +266,7 @@ def run_sac(model, args):
     variant['net_seed'] = args.net_seed
     variant['model'] = args.model
     variant['args'] = args
-    ptu.set_gpu_mode(True)
+    ptu.set_gpu_mode(False)  # Changed to False to use CPU instead of GPU
     if "SAC" == args.model or "VarSAC" in args.model:
         sac_experiment(model, variant)
     else:

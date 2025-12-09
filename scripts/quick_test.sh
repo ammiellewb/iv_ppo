@@ -1,11 +1,16 @@
 #!/bin/bash
 
-# Quick test script for IV-RL PPO on Pendulum environment
+# Quick test script for IV-RL PPO 
 # This runs a single experiment of each method for validation
+
+# Activate conda environment
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate iv_rl_dqn
 
 # WandB Configuration
 export WANDB_PROJECT="iv-rl"
 
+. ./.env
 if [ -z "$WANDB_API_KEY" ]; then
     echo "ERROR: WANDB_API_KEY not set. Please export WANDB_API_KEY before running."
     echo "Example: export WANDB_API_KEY='your_api_key_here'"
@@ -20,15 +25,16 @@ PROJECT_ROOT="/home/ammiellewb/iv_rl"
 cd $PROJECT_ROOT
 
 echo "==============================================="
-echo "Quick Test: Pendulum-v0 (500 episodes)"
+echo "Quick Test: HalfCheetah-v4 (500 episodes)"
 echo "Running: PPO, EnsemblePPO, IV_PPO"
+echo "Using conda env: iv_rl_dqn (newer torch, GPU compatible)"
 echo "==============================================="
 echo ""
 
 # Test Baseline PPO
 echo "1/3 Testing Baseline PPO..."
 python main.py \
-    --env Pendulum-v0 \
+    --env HalfCheetah-v4 \
     --model PPO \
     --env_seed 0 \
     --net_seed 0 \
@@ -40,7 +46,7 @@ PPO_PID=$!
 # Test EnsemblePPO
 echo "2/3 Testing EnsemblePPO..."
 python main.py \
-    --env Pendulum-v0 \
+    --env HalfCheetah-v4 \
     --model EnsemblePPO \
     --env_seed 0 \
     --net_seed 0 \
@@ -52,7 +58,7 @@ ENSEMBLE_PID=$!
 # Test IV-PPO
 echo "3/3 Testing IV-PPO..."
 python main.py \
-    --env Pendulum-v0 \
+    --env HalfCheetah-v4 \
     --model IV_PPO \
     --env_seed 0 \
     --net_seed 0 \
