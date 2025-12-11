@@ -200,10 +200,16 @@ class PPOAgent:
             # Use WANDB_PROJECT env var if set, otherwise construct from opt
             import os
             project_name = os.getenv('WANDB_PROJECT', f"{opt.exp}_{opt.env}_{opt.model}")
+            
+            # Force offline mode for batch jobs
+            wandb_mode = os.getenv('WANDB_MODE', 'online')
+            
             wandb.init(project=project_name, 
                       name=f"{opt.env}_{opt.model}_seed{opt.env_seed}",
                       config=vars(opt),
-                      tags=[opt.tag, opt.env, opt.model])
+                      tags=[opt.tag, opt.env, opt.model],
+                      mode=wandb_mode,
+                      settings=wandb.Settings(start_method="thread"))
                       
     def select_action(self, state, deterministic=False):
         """Select an action from the policy.
@@ -437,9 +443,9 @@ class PPOAgent:
         """
         scores_window = deque(maxlen=100)
         
-        print(f"Training PPO on {self.opt.env}...")
-        print(f"State size: {self.state_size}, Action size: {self.action_size}")
-        print(f"Continuous: {self.continuous}")
+        print(f"Training PPO on {self.opt.env}...", flush=True)
+        print(f"State size: {self.state_size}, Action size: {self.action_size}", flush=True)
+        print(f"Continuous: {self.continuous}", flush=True)
         
         epoch = 0
         while self.episode < n_episodes:
@@ -461,7 +467,7 @@ class PPOAgent:
                 print(f"Epoch {epoch}, Episode {self.episode}, "
                       f"Avg Score: {avg_score:.2f}, "
                       f"Policy Loss: {policy_loss:.4f}, "
-                      f"Value Loss: {value_loss:.4f}")
+                      f"Value Loss: {value_loss:.4f}", flush=True)
                       
             # Save checkpoint
             if self.opt.save_freq > 0 and epoch % self.opt.save_freq == 0:
