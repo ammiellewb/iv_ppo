@@ -306,6 +306,42 @@ config = dict({
 
 	},
 
+	"Walker2d-v4":{
+
+		"PPO":{
+			"batch_size"        : 64,
+			"buffer_size"       : 2048,
+			"gamma"             : 0.99,
+			"policy_lr"         : 0.0003,
+			"qf_lr"             : 0.001
+		},
+
+		"EnsemblePPO":{
+			"batch_size"        : 64,
+			"buffer_size"       : 2048,
+			"gamma"             : 0.99,
+			"policy_lr"         : 0.0003,
+			"qf_lr"             : 0.001,
+			"num_nets"          : 5,
+			"tau"               : 0.005
+		},
+
+		"IV_PPO":{
+			"batch_size"        : 64,
+			"buffer_size"       : 2048,
+			"gamma"             : 0.99,
+			"policy_lr"         : 0.0003,
+			"qf_lr"             : 0.001,
+			"num_nets"          : 5,
+			"tau"               : 0.005,
+			"xi"                : 1.0,
+			"dynamic_xi"        : False,
+			"minimal_eff_bs"    : 48,
+			"lambda_biv"        : 0.5
+		}
+
+	},
+
 	"Ant-v3":{
 
 		"PPO":{
