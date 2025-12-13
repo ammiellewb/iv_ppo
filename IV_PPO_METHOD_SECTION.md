@@ -293,18 +293,18 @@ The choice of hyperparameters in IV-PPO balances computational efficiency, learn
 
 | Parameter | Value | Rationale |
 |-----------|-------|-----------|
-| `num_nets` (K) | 5 | **Computational-theoretical trade-off**: K=3 underestimates epistemic uncertainty (insufficient diversity), K≥7 provides diminishing returns. K=5 balances ensemble disagreement signal with 5× value network overhead |
-| `tau` | 0.005 | **Target network stability**: Slow updates (τ << 1) ensure epistemic variance estimates don't fluctuate wildly. Tested τ ∈ {0.001, 0.005, 0.01}; 0.005 provided best learning curves without stale targets |
+| `num_nets` (K) | 5 | **Computational-theoretical trade-off**: K=5 follows the original IV-RL paper recommendation, balancing ensemble diversity with computational overhead |
+| `tau` | 0.005 | **Target network stability**: Slow updates (τ << 1) ensure epistemic variance estimates remain stable during training |
 
-**Empirical Validation**: On LunarLander, K=5 achieved 21.7% improvement over PPO, while K=3 only achieved 15.2% and K=7 reached 22.1% (marginal gain for 40% more compute).
+**Empirical Validation**: With K=5, IV-PPO achieved 21.7% improvement over PPO on LunarLander. The choice of K=5 balances computational cost with sufficient ensemble diversity.
 
 ### IV-RL Specific Parameters
 
 | Parameter | Value | Rationale |
 |-----------|-------|-----------|
-| `xi` | 1.0 | **Regularization strength**: Prevents degenerate weight distributions when σ²_total → 0. Too small (ξ=0.1) caused weight collapse (BS_eff < 10); too large (ξ=5.0) diluted BIV effect. ξ=1.0 maintained BS_eff ≈ 40-50 |
-| `lambda_biv` | 0.5 | **BIV-LA balance**: Equal weighting (λ=0.5) performed best in preliminary sweeps. λ=0.8 (BIV-heavy) caused variance head to underfit; λ=0.2 (LA-heavy) reduced sample weighting effectiveness |
-| `dynamic_xi` | False | **Fixed vs adaptive**: Static ξ=1.0 generalized better across environments than dynamic adaptation. Dynamic mode helped on single environments but hurt transfer (requires per-task tuning) |
+| `xi` | 1.0 | **Regularization strength**: Prevents degenerate weight distributions when σ²_total → 0. Value chosen based on original IV-RL paper recommendations |
+| `lambda_biv` | 0.5 | **BIV-LA balance**: Equal weighting (λ=0.5) gives both loss components equal importance in the combined objective |
+| `dynamic_xi` | False | **Fixed vs adaptive**: Static ξ=1.0 used for simplicity and generalization across environments |
 | `minimal_eff_bs` | 48 | **Target effective batch size**: Set to 75% of batch_size (64) to maintain sufficient gradient signal. Only used if dynamic_xi=True |
 
 **Design Philosophy**: We prioritize **fixed hyperparameters that generalize** over environment-specific tuning. Static ξ=1.0 works across Pendulum, LunarLander, HalfCheetah, and Walker2d without modification.
@@ -329,30 +329,16 @@ IV-PPO incurs additional computational costs compared to standard PPO:
 - **Dual-head networks**: Variance head adds ~15% parameters to value network
 - **Total training time**: ~1.2-1.4× slower than PPO baseline
 
-**Trade-off**: The 20-40% computational overhead is justified by 21.7% sample efficiency improvement on heteroscedastic tasks, effectively recovering the cost through fewer required environment interactions.
-
-### Hyperparameter Sensitivity
-
-We conducted ablation studies on LunarLanderContinuous-v2 to assess robustness:
-
-| Parameter | Tested Range | Performance Variation |
-|-----------|--------------|----------------------|
-| ξ | [0.1, 0.5, 1.0, 2.0, 5.0] | ±8% (robust around 1.0) |
-| λ_biv | [0.2, 0.35, 0.5, 0.65, 0.8] | ±12% (peak at 0.5) |
-| K | [3, 5, 7, 9] | ±6% (plateau at K≥5) |
-| τ | [0.001, 0.005, 0.01, 0.05] | ±15% (unstable at τ≥0.05) |
-
-**Conclusion**: IV-PPO is reasonably robust to hyperparameter choices within a factor of 2, except for target update rate τ which requires careful tuning (too fast causes instability, too slow causes stale targets).
+**Trade-off**: The 20-40% computational overhead is offset by improved sample efficiency on heteroscedastic tasks (21.7% improvement on LunarLander).
 
 ### Recommendations for New Environments
 
 When applying IV-PPO to new tasks:
 
-1. **Start with defaults** (ξ=1.0, λ=0.5, K=5, τ=0.005, dynamic_xi=False)
+1. **Start with defaults** (ξ=1.0, λ=0.5, K=5, τ=0.005, dynamic_xi=False) based on original IV-RL paper
 2. **Adjust learning rates** based on environment complexity (reduce for high-dimensional contact-rich tasks)
-3. **Monitor effective batch size**: If BS_eff consistently < 20, increase ξ
-4. **Check variance predictions**: Log mean aleatoric/epistemic variance to ensure neither dominates (both should be O(1-100) for normalized rewards)
-5. **Avoid environment-specific tuning**: If defaults fail, consider whether the environment is unsuitable for IV-RL (e.g., discrete contact dynamics as in HalfCheetah)
+3. **Monitor training stability**: Check that both aleatoric and epistemic variance estimates remain reasonable (not diverging to extreme values)
+4. **Consider environment characteristics**: IV-RL shows strongest benefits on tasks with continuous stochastic noise (like LunarLander wind), less benefit on discrete contact dynamics (like HalfCheetah)
 
 ---
 
