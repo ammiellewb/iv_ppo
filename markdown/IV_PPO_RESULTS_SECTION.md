@@ -64,50 +64,49 @@ All experiments use 5 random seeds per method. Final performance is computed as 
 
 ### LunarLanderContinuous-v2: Heteroscedastic Environment
 
-LunarLanderContinuous-v2 exhibits state-dependent stochasticity through its wind mechanics, creating heteroscedastic reward and transition noise. The numerical results show:
+LunarLanderContinuous-v2 includes stochastic wind mechanics. The numerical results show:
 
-- **IV-PPO achieves +21.9% improvement over PPO** (129.3 vs 106.1 mean return)
-- **IV-PPO outperforms EnsemblePPO by +6.2%** (129.3 vs 121.8)
-- EnsemblePPO shows +14.8% improvement over PPO
+- **IV-PPO: 129.3 ± 29.9** (+21.9% vs PPO)
+- **EnsemblePPO: 121.8 ± 21.2** (+14.8% vs PPO)
+- **PPO: 106.1 ± 24.8**
 
-The performance ordering (IV-PPO > EnsemblePPO > PPO) is consistent with the IV-RL framework's hypothesis that environments with state-dependent noise benefit from explicit uncertainty decomposition. The gap between IV-PPO and EnsemblePPO (+6.2%) represents the contribution of the aleatoric variance head and loss attenuation beyond epistemic uncertainty estimation alone.
+IV-PPO achieves the highest mean return on this environment.
 
 ### Pendulum-v1: Homoscedastic Baseline
 
-Pendulum-v1 has deterministic dynamics and uniform reward structure, serving as a control environment where heteroscedastic methods should not degrade performance. Results show:
+Pendulum-v1 has deterministic dynamics. Results show:
 
-- **IV-PPO matches PPO performance** (-1398.1 vs -1396.5, difference within noise)
-- **EnsemblePPO shows +8.9% improvement** (-1272.4 vs -1396.5)
+- **IV-PPO: -1398.1 ± 160.0** (-0.1% vs PPO)
+- **EnsemblePPO: -1272.4 ± 175.7** (+8.9% vs PPO)
+- **PPO: -1396.5 ± 195.0**
 
-The comparable performance of IV-PPO and PPO on this homoscedastic task indicates that the uncertainty weighting mechanism does not harm learning when heteroscedasticity is absent. The EnsemblePPO improvement suggests ensemble value estimation provides benefits independent of uncertainty weighting.
+IV-PPO and PPO achieve comparable performance. EnsemblePPO achieves the highest mean return.
 
 ### HalfCheetah-v4: Contact-Rich Dynamics
 
-HalfCheetah-v4 presents a challenging high-dimensional locomotion task with discrete contact events. Results show:
+HalfCheetah-v4 is a high-dimensional locomotion task. Results show:
 
-- **All methods exhibit negative cumulative returns**, indicating the task was not solved within the training budget
-- **PPO and EnsemblePPO perform comparably** (-37744.6 vs -37720.5)
-- **IV-PPO shows -3.8% relative to PPO** (-39197.1 vs -37744.6)
+- **IV-PPO: -39197.1 ± 580.1** (-3.8% vs PPO)
+- **EnsemblePPO: -37720.5 ± 277.4** (+0.1% vs PPO)
+- **PPO: -37744.6 ± 434.3**
 
-The contact-rich dynamics of HalfCheetah generate noise patterns that differ from the continuous stochasticity assumed by the IV-RL framework. As noted in Mai et al. (2022), IV-RL's benefits are most pronounced in environments with "heteroscedastic noise in the data," which may not characterize the discrete contact dynamics of MuJoCo locomotion tasks.
+All methods exhibit negative cumulative returns. IV-PPO underperforms both baselines on this environment.
 
 ### Walker2d-v4: Balance Task
 
-Walker2d-v4 requires maintaining balance while locomoting, with discrete contact transitions. Results show:
+Walker2d-v4 is a bipedal locomotion task. Results show:
 
-- **IV-PPO shows +1.8% improvement** (154.7 vs 151.9)
-- **EnsemblePPO shows +0.7% improvement** (153.0 vs 151.9)
-- **All methods achieve similar final performance** with low variance across seeds
+- **IV-PPO: 154.7 ± 1.4** (+1.8% vs PPO)
+- **EnsemblePPO: 153.0 ± 1.7** (+0.7% vs PPO)
+- **PPO: 151.9 ± 0.6**
 
-The modest improvements suggest this environment has less exploitable heteroscedasticity than LunarLander.
+All methods achieve similar final performance with low variance across seeds.
 
 ---
 
-## Quantifying Uncertainty's Role
+## Method Comparison
 
-The central hypothesis of IV-RL is that inverse-variance weighting improves learning by down-weighting unreliable samples. To quantify this effect, we compare three levels of uncertainty utilization:
-
-### Ablation Structure
+The three methods differ in their uncertainty estimation components:
 
 | Method | Epistemic (Ensemble) | Aleatoric (Variance Head) | BIV Weighting | Loss Attenuation |
 |--------|---------------------|---------------------------|---------------|------------------|
@@ -115,54 +114,37 @@ The central hypothesis of IV-RL is that inverse-variance weighting improves lear
 | EnsemblePPO | ✓ | ✗ | ✗ | ✗ |
 | IV-PPO | ✓ | ✓ | ✓ | ✓ |
 
-### Observed Effects
+### Observed Results
 
-**On LunarLanderContinuous-v2** (heteroscedastic):
-- PPO → EnsemblePPO: +14.8% (epistemic uncertainty estimation via ensemble)
-- EnsemblePPO → IV-PPO: +6.2% (aleatoric estimation + BIV weighting + loss attenuation)
-- Total PPO → IV-PPO: +21.9%
+**LunarLanderContinuous-v2**:
+- IV-PPO: +21.9% vs PPO
+- EnsemblePPO: +14.8% vs PPO
 
-The incremental improvement from EnsemblePPO to IV-PPO (+6.2%) represents the value of the full IV-RL methodology beyond ensemble-based epistemic uncertainty.
+**Pendulum-v1**:
+- IV-PPO: -0.1% vs PPO
+- EnsemblePPO: +8.9% vs PPO
 
-**On Pendulum-v1** (homoscedastic):
-- PPO → EnsemblePPO: +8.9%
-- EnsemblePPO → IV-PPO: -9.0% (relative to EnsemblePPO)
-- Total PPO → IV-PPO: -0.1%
+**HalfCheetah-v4**:
+- IV-PPO: -3.8% vs PPO
+- EnsemblePPO: +0.1% vs PPO
 
-The variance head and BIV weighting do not provide additional benefit on this deterministic environment, consistent with expectations.
+**Walker2d-v4**:
+- IV-PPO: +1.8% vs PPO
+- EnsemblePPO: +0.7% vs PPO
 
-### Interpretation
-
-The results support the IV-RL framework's core prediction: **uncertainty-aware weighting improves sample efficiency specifically in heteroscedastic environments**. The +21.9% improvement on LunarLander demonstrates this effect, while the neutral performance on Pendulum confirms the method does not degrade learning when heteroscedasticity is absent.
-
-However, the results also reveal limitations:
-1. **Contact-rich dynamics** (HalfCheetah) may not exhibit the continuous heteroscedasticity that IV-RL exploits
-2. **The magnitude of improvement** varies substantially by environment (from -3.8% to +21.9%)
-3. **Ensemble effects** (EnsemblePPO improvements) are partially independent of IV-RL weighting
+IV-PPO shows the largest improvement on LunarLanderContinuous-v2. Performance varies across environments, with IV-PPO underperforming on HalfCheetah-v4.
 
 ---
 
 ## Discussion
 
-### Where IV-PPO Succeeds
+### Cross-Seed Variance
 
-LunarLanderContinuous-v2 represents an ideal test case for IV-RL: the environment includes explicit stochastic wind disturbances that create state-dependent noise. In such settings, the BIV weighting mechanism can effectively down-weight transitions corrupted by high noise, leading to more efficient value learning. The +21.9% improvement over PPO and +6.2% over EnsemblePPO quantifies this benefit.
-
-### Where IV-PPO Shows Limited Benefit
-
-On MuJoCo locomotion tasks (HalfCheetah, Walker2d), the improvements are modest or negative. These environments exhibit:
-- **Discrete contact events** rather than continuous stochastic noise
-- **High-dimensional state spaces** where variance estimation is more challenging
-- **Complex reward landscapes** where the primary learning challenge may not be sample noise
-
-### Variance Reduction
-
-Comparing standard deviations across seeds:
-- LunarLander: IV-PPO std = 29.9 vs PPO std = 24.8 (higher variance)
-- Pendulum: IV-PPO std = 160.0 vs PPO std = 195.0 (18% lower variance)
-- Walker2d: IV-PPO std = 1.4 vs PPO std = 0.6 (higher variance)
-
-The variance reduction hypothesis from the original IV-RL paper is not consistently supported in these PPO experiments. This may reflect differences between the off-policy (DQN) setting in Mai et al. (2022) and the on-policy PPO setting evaluated here.
+Standard deviations across 5 seeds (from the data):
+- LunarLander: IV-PPO std = 29.9, PPO std = 24.8
+- Pendulum: IV-PPO std = 160.0, PPO std = 195.0
+- HalfCheetah: IV-PPO std = 580.1, PPO std = 434.3
+- Walker2d: IV-PPO std = 1.4, PPO std = 0.6
 
 ---
 
@@ -178,6 +160,6 @@ The variance reduction hypothesis from the original IV-RL paper is not consisten
 
 ---
 
-## Conclusion
+## Summary
 
-IV-PPO demonstrates substantial improvements (+21.9%) on LunarLanderContinuous-v2, an environment with explicit heteroscedastic noise, while maintaining comparable performance on homoscedastic tasks. The results support the IV-RL framework's core hypothesis that uncertainty-weighted learning benefits heteroscedastic environments. However, benefits do not transfer consistently to contact-rich MuJoCo tasks, suggesting the method's applicability depends on the nature of environmental stochasticity. Future work should investigate uncertainty visualization and correlation with learning progress to better characterize when IV-RL provides benefits.
+IV-PPO achieves +21.9% improvement over PPO on LunarLanderContinuous-v2, -0.1% on Pendulum-v1, -3.8% on HalfCheetah-v4, and +1.8% on Walker2d-v4. Uncertainty estimates (epistemic and aleatoric variance) were not logged during training, preventing direct analysis of how the weighting mechanism affects learning dynamics.
