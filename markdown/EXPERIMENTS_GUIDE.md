@@ -2,26 +2,8 @@
 
 ## Overview
 This guide provides instructions for running comprehensive experiments comparing:
-1. **Baseline PPO**: Standard Proximal Policy Optimization
-2. **EnsemblePPO**: PPO with ensemble of value networks (epistemic uncertainty only)
-3. **IV-PPO**: Full Inverse-Variance Reinforcement Learning with both uncertainties
 
-## Prerequisites
 
-### 1. Install Dependencies
-```bash
-pip install wandb gymnasium torch numpy
-# For MuJoCo environments:
-pip install gymnasium[mujoco]
-```
-
-### 2. Set Up WandB
-```bash
-# Get your API key from https://wandb.ai/authorize
-export WANDB_API_KEY='your_api_key_here'
-```
-
-## Running Experiments
 
 ### Full Experimental Suite
 Runs all experiments (baseline, ablations, different seeds) on all continuous control environments:
