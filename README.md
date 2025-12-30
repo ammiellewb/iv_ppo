@@ -1,5 +1,7 @@
 # IV-PPO Setup
 
+[View the final report](syde_522_final_report.pdf)
+
 ## Experiment Checklist
 
 - [ ] Environment activated (`conda activate iv_rl`)
